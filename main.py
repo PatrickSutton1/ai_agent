@@ -1,36 +1,41 @@
-import os
-from dotenv import load_dotenv
+#!/home/patricksutton/git/ai_agent/bin/python3
+
 import sys
-
-load_dotenv()
-api_key = os.environ.get("GEMINI_API_KEY")
-
+import os
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
 
-client = genai.Client(api_key=api_key)
-
-user_prompt = sys.argv[1:]
-prompt_history = ["User Input"]
-prompt_history = prompt_history.extend(user_prompt)
-
-messages = [
-    types.Content(role="user",parts=[types.Part(text=user_prompt)]),
-]
 
 def main():
-    if len(sys.argv) < 2:
+    load_dotenv()
+
+    args = sys.argv[1:]
+
+    if not args:
+        print("AI Code Assistant")
+        print('\nUsage: python main.py "<your prompt here>"')
+        print('Example: python main.py "How do I build a calculator in Python?"')
         sys.exit(1)
-    else:
-        response = client.models.generate_content(
+    user_prompt = " ".join(args)
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    client = genai.Client(api_key=api_key)
+
+    messages = [
+        types.Content(role="user",parts=[types.Part(text=user_prompt)]),
+    ]
+
+    response = client.models.generate_content(
             model='gemini-2.0-flash-001', 
             contents=messages,
         )
-        print(response.text)
 
-        print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-        print("Response tokens:", response.usage_metadata.candidates_token_count)
+    print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+    print("Response tokens:", response.usage_metadata.candidates_token_count)
  
+    print("Respone:")
+    print(response.text)
 
 if __name__ == "__main__":
     main()
