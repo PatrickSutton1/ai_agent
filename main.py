@@ -30,8 +30,8 @@ def main():
             model='gemini-2.0-flash-001', 
             contents=messages,
         )
-
-    if any([arg=='-v' or arg=='--verbose' for arg in args]):
+    cli_args = sys.argv[2:]
+    if any([arg=='-v' or arg=='--verbose' for arg in cli_args]):
         print("User prompt:", user_prompt)
         print("Prompt tokens:", response.usage_metadata.prompt_token_count)
         print("Response tokens:", response.usage_metadata.candidates_token_count)
