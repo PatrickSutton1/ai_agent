@@ -31,8 +31,11 @@ def main():
             contents=messages,
         )
 
-    print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-    print("Response tokens:", response.usage_metadata.candidates_token_count)
+    if any([arg=='-v' or arg=='--verbose' for arg in args]):
+        print("User prompt:", user_prompt)
+        print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+        print("Response tokens:", response.usage_metadata.candidates_token_count)
+
  
     print("Respone:")
     print(response.text)
