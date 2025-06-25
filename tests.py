@@ -13,8 +13,15 @@
 # get_file_content("calculator", "pkg/calculator.py")
 # get_file_content("calculator", "/bin/cat")
 
-from functions.write_file import write_file
+# from functions.write_file import write_file
 
-write_file("calculator", "lorem.txt", "wait, this isn't lorem ipsum")
-write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet")
-write_file("calculator", "/tmp/temp.txt", "this should not be allowed")
+# write_file("calculator", "lorem.txt", "wait, this isn't lorem ipsum")
+# write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet")
+# write_file("calculator", "/tmp/temp.txt", "this should not be allowed")
+
+from functions.run_python import run_python_script
+
+run_python_script("calculator", "main.py")
+run_python_script("calculator", "tests.py")
+run_python_script("calculator", "../main.py")
+run_python_script("calculator", "nonexistent.py")
