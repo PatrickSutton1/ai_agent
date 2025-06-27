@@ -1,5 +1,3 @@
-#!/home/patricksutton/git/ai_agent/bin/python3
-
 import sys
 import os
 from google import genai
@@ -8,6 +6,7 @@ from dotenv import load_dotenv
 
 from prompts import system_prompt
 from call_function import call_function, available_functions
+from config import MAX_ITERS
 
 def main():
     load_dotenv()
@@ -28,14 +27,19 @@ def main():
         types.Content(role="user",parts=[types.Part(text=user_prompt)]),
     ]
 
-    generate_content(client, messages, verbose)
+    for i in range(MAX_ITERS):
+        candidates, function_responses = generate_content(client, messages, verbose)
+        for candidate in candidates:
+            messages.append(candidate.content)
+        if function_responses == None:
+            print(messages[-1].parts[0].text)
+            break
+        else:
+            messages.append(types.Content(role='tool', parts=function_responses))
+    
 
-    # conversation = []
-    # conversation.append(["User: " + user_prompt],
-    #                     ["Model: " + function_responses.candidates],
-    #                     ["Tool: " + function_responses.parts[0].function_response.response])
-
-    iteration_to_solution(conversation=conversation)
+    # print(messages[-1])
+    # generate_content(client, messages, verbose)
 
 def generate_content(client, messages, verbose):
     response = client.models.generate_content(
@@ -46,9 +50,10 @@ def generate_content(client, messages, verbose):
     if verbose:
         print("Prompt tokens:", response.usage_metadata.prompt_token_count)
         print("Response tokens:", response.usage_metadata.candidates_token_count)
+        # print("Response: ", response.text)
 
     if not response.function_calls:
-        return response.text
+        return response.candidates, None
     
     function_responses = []
     for function_call_part in response.function_calls:
@@ -64,8 +69,9 @@ def generate_content(client, messages, verbose):
 
     if not function_responses:
         raise Exception("no function responses generated, exiting")
-
-# def iteration_to_solution (conversation)
+    return response.candidates, function_responses
+    
+    
 
 if __name__ == "__main__":
     main()
