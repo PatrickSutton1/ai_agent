@@ -1,7 +1,8 @@
 import os
 import subprocess
+from google.genai import types
 
-def run_python_script(working_directory, file_path):
+def run_python_file(working_directory, file_path, args=None):
     """
     Runs a Python script located at file_path in the specified working_directory.
     
@@ -12,23 +13,49 @@ def run_python_script(working_directory, file_path):
     Returns:
         str: The output of the script execution.
     """
-    abs_wd = os.path.abspath(working_directory) 
-    target_file = os.path.abspath(os.path.join(working_directory, file_path))
-    print(target_file)
-    if target_file.startswith(abs_wd):
-        if os.path.isfile(target_file):
-            if target_file.endswith('.py'):
-                subprocess.run(['python', target_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=30, cwd=abs_wd)
-                if subprocess.STDOUT is not None:
-                    print(f'STDOUT: {subprocess.PIPE}')
-                    print(f'STDERR: {subprocess.STDOUT}')
-                elif subprocess.CompletedProcess.returncode != 0:
-                    print(f'Process exitex with code {subprocess.CompletedProcess.returncode}')
-                else:
-                    print("No output produced.")
-            else:
-                print(f'Error: "{file_path}" is not a Python file.')
-        else:
-            print(f'Error: File "{file_path}" not found.')
-    else:
-        print(f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory')
+    abs_working_dir = os.path.abspath(working_directory) 
+    abs_file_path = os.path.abspath(os.path.join(working_directory, file_path))
+    if not abs_file_path.startswith(abs_working_dir):
+        return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
+    if not os.path.exists(abs_file_path):
+        return f'Error: File "{file_path}" not found.'
+    if not file_path.endswith('.py'):
+        return f'Error: "{file_path}" is not a Python file.'
+    try:
+        commands = ["python", abs_file_path]
+        if args:
+            commands.extend(args)
+        result = subprocess.run(
+            commands,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=abs_working_dir,
+        )
+        output = []
+        if result.stdout:
+            output.append(f'STDOUT:\n{result.stdout}')
+        if result.stderr:
+            output.append(f'STDERR:\n{result.stderr}')
+
+        if result.returncode != 0:
+            output.append(f'Process exited with code {result.returncode}')
+
+        return "\n".join(output) if output else "No output produced."
+    except Exception as e:
+        return f'Error executing Python file: {e}'
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Runs python scripts in the specified directory, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The file path to run python script, relative to the working directory."
+            ),
+        },
+    ),
+)
+
